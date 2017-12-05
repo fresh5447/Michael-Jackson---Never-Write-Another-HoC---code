@@ -1,17 +1,23 @@
 import React, {Component} from 'react'
 // import PropTypes from 'prop-types'
 
-class App extends Component {
-  state = {
-    x: 0,
-    y: 0
-  }
-  handleMouseMove = (event) => {
+const MouseMixin = {
+  getInitialState () {
+    return ({
+      x: 0,
+      y: 0
+    })
+  },
+  handleMouseMove: (event) => {
     this.setState({
       x: event.clientX,
       y: event.clientY
     })
   }
+}
+
+class App extends Component {
+  mixins = [MouseMixin]
   render () {
     const {x, y} = this.state
     return (
