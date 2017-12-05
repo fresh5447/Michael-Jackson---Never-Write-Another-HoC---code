@@ -1,47 +1,49 @@
 import React, {Component} from 'react'
 // import PropTypes from 'prop-types'
 
-// Problem with mixin:
-// Not always obvious where the state is coming from.
-// Which one of these mixins is even providing my state?
-// Mixins that manipulate state are bad etc.
-// 2 What if you had a second mixin that tried to manipulate the
-// same state?
+// HOC pattern: What if this is a way to share code, instead of Mixins?
+// Your HOC is itself a funciton, that is used to enhance another conponent.
+// It could keep some state, or data, and then pass that data to your component as a prop.
+// We could take info that is shared, put it in the HOC, then just
+// wrap all of our components in the HOC.
 
-// Mixin Issues Recap:
-// Dont want to support createClass
-// Don't know where state is coming from
-// Name clashing
+// HOF
+const add = (x, y) => x + y
+add(9, 8)
 
-const MouseMixin = {
-  getInitialState () {
-    return ({
+const createAdder = (a) => (b) => add(a, b) // HOF
+// ITS crate adders job to create a new function.
+const addTwo = createAdder(2)
+
+addTwo(8) // 10
+
+const withMouse = (Component) => {
+  return class extends Component {
+    state = {
       x: 0,
       y: 0
-    })
-  },
-  handleMouseMove: (event) => {
-    this.setState({
-      x: event.clientX,
-      y: event.clientY
-    })
-  }
-}
-
-const MouseMixin = {
-  getInitialState () {
-    return ({
-      x: 'ahahahahaaha'
-    })
+    }
+    handleMouseMove = (event) => {
+      this.setState({
+        x: event.clientX,
+        y: event.clientY
+      })
+    }
+    render () {
+      return (
+        <div onMouseMove={this.handleMouseMove}>
+          <Component mouse={this.state} />
+        </div>
+      )
+    }
   }
 }
 
 class App extends Component {
-  mixins = [MouseMixin, MouseMixin]
   render () {
-    const {x, y} = this.state
+    const {x, y} = this.props.mouse
     return (
-      <div style={{height: '100vh'}} onMouseMove={this.handleMouseMove}>
+      <div style={{height: '100vh'}}>
         <div>
           <h1> The Mouse Position is ({x} , {y})</h1>
         </div>
@@ -50,4 +52,4 @@ class App extends Component {
   }
 }
 
-export default App
+export default withMouse(App)
