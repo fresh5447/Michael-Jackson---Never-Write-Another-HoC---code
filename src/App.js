@@ -1,34 +1,21 @@
 import React, {Component} from 'react'
 // import PropTypes from 'prop-types'
 
-// HOC pattern: What if this is a way to share code, instead of Mixins?
-// Your HOC is itself a funciton, that is used to enhance another conponent.
-// It could keep some state, or data, and then pass that data to your component as a prop.
-// We could take info that is shared, put it in the HOC, then just
-// wrap all of our components in the HOC.
+// Render Props
+// I'm going to do some work, and then im going to give to you some state (data)
+// and you're going to tell me what I render.
+// Give me a function that tells me what to render
 
-// 1) We can share behavior - anyone can use the withMouseComp
+// A prop that I use to know what to render
 
-// Problems with HOC implementation
+// We now don't receive any magical props, or state.
+// We just use components.
 
-// We have a lot of the same problems we've had with Mixins,
-// weve just changed forms.
-// we can use ES6 classes, woohoo 👎
-
-// "Composition is better than inheritance"
-
-// HOF
-const add = (x, y) => x + y
-add(9, 8)
-
-const createAdder = (a) => (b) => add(a, b) // HOF
-// ITS crate adders job to create a new function.
-const addTwo = createAdder(2)
-
-addTwo(8) // 10
-
-const withCat = (Component) => {
-  return class extends Component {
+// All of our code is encapsulated in a regular compoent.
+// You want to  track the mouse, just render the Mouse compoent.
+// the mouse is explicitly being passed in.. no mystery state or props.
+// naming collisions, issues are just not there.
+class Mouse extends Component {
     state = {
       x: 0,
       y: 0
@@ -42,63 +29,63 @@ const withCat = (Component) => {
     render () {
       return (
         <div onMouseMove={this.handleMouseMove}>
-          <Component {...this.props} mouse={this.state} />
+          {this.props.children(this.state)}
         </div>
       )
     }
-  }
 }
 
-const withMouse = (Component) => {
-  return class extends Component {
-    state = {
-      x: 0,
-      y: 0
-    }
-    handleMouseMove = (event) => {
-      this.setState({
-        x: event.clientX,
-        y: event.clientY
-      })
-    }
-    render () {
-      return (
-        <div onMouseMove={this.handleMouseMove}>
-          <Component {...this.props} mouse={this.state} />
-        </div>
-      )
-    }
+class Cat extends Component {
+  state = {
+    x: 0,
+    y: 0
   }
-}
-
-class App extends Component {
+  handleMouseMove = (event) => {
+    console.log('MOUSE:', this.props.mouse)
+    this.setState({
+      x: event.clientX,
+      y: event.clientY
+    })
+  }
   render () {
-    const {x, y} = this.props.mouse
     return (
-      <div style={{height: '100vh'}}>
-        <div>
-          <h1> The Mouse Position is ({x} , {y})</h1>
-          <p>The message is {this.props.message} </p>
-        </div>
+      <div onMouseMove={this.handleMouseMove}>
+        {this.props.children(this.state)}
       </div>
     )
   }
 }
 
-// Composition is happening statically (doesn't change),
-// at class creation time.
-// The whole React flow is very dynamic
-// we have to be very careful up front when
-// doing things statically
-// we have to be sure that's what we want.
-// HOCS do not compose dynamically (not a failure of mixins)
-export default withMouse(withCat(App))
+class App extends Component {
+  render () {
+    return (
+      <Mouse>
+        {
+          mouse =>
+            <Cat mouse={mouse}>
+              {
+                cat =>
+                  <div style={{height: '100vh'}}>
+                    <div>
+                      <h1> The Mouse Position is ({mouse.x} , {mouse.y})</h1>
+                      <p> The message is {this.props.message}</p>
+                    </div>
+                  </div>
+              }
+            </Cat>
+        }
+      </Mouse>
+    )
+  }
+}
 
-// When App is imported, they aren't really
-// aware of the withMouse thing..
-// Have to pass through props to get message.
+// Cat component doesn't really do anything,
+// it's just to show that we can compose components dynamically
+// Using a regular component, and composing inside our render method.
 
-// Still have name collision problems. See withCat example
-// multiple HOCS on the same component. Sometimes you wrap it multiple times.
-// 8 or 9 components wrapping one component.
-// every problem is the nail, and every HOC is the hammer
+export default App
+
+// What proves this pattern is more powerful than HOC?
+// You can write any HOC pattern with a render prop.
+// The inverse is not true
+// You can not write a HOC with a component with a render prop
